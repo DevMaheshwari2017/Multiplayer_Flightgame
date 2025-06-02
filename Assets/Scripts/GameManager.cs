@@ -4,8 +4,6 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Photon.Pun;
-using Photon.Realtime;
-using ExitGames.Client.Photon;
 
 public class GameManager : MonoBehaviourPunCallbacks
 {
@@ -13,18 +11,17 @@ public class GameManager : MonoBehaviourPunCallbacks
     [SerializeField] private GraphicRaycaster raycaster;
     [SerializeField] private EventSystem eventSystem;
 
-    private PhotonView view;
     private JetController myJet;
-    private const string MissileCountKey = "activeMissiles";
-    private const int maxMissiles = 2;
+    //private const string MissileCountKey = "activeMissiles";
+    //private const int maxMissiles = 2;
 
     private void Awake()
     {
         missileErrormsg.SetActive(false);
-        if(!PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey(MissileCountKey))
-        {
-            SetMissileCount(0);
-        }
+        //if(!PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey(MissileCountKey))
+        //{
+        //    SetMissileCount(0);
+        //}
     }
     void Update()
     {
@@ -44,23 +41,23 @@ public class GameManager : MonoBehaviourPunCallbacks
 
                 if (hitObject.CompareTag("Target"))
                 {
-                    int currentMissiles = GetMissileCount();
+                    Target target = hitObject.GetComponent<Target>();
+                    PhotonView targetView = hitObject.GetComponent<PhotonView>();
 
-                    if (currentMissiles >= maxMissiles)
+                    if (target == null || targetView == null)
+                        return;
+
+                    if (!target.CanBeTargeted())
                     {
                         StartCoroutine(ShowTooMuchMissileMsg());
                         return;
                     }
 
-                    // Increase missile count
-                    photonView.RPC("RPC_IncrementMissileCount", RpcTarget.All);
-
                     // Fire missile
-                    PhotonView targetView = hitObject.GetComponent<PhotonView>();
-                    if (targetView != null)
-                    {
-                        myJet.photonView.RPC("FireMissileRPC", myJet.photonView.Owner, targetView.ViewID);
-                    }
+                    myJet.photonView.RPC("FireMissileRPC", myJet.photonView.Owner, targetView.ViewID);
+
+                    // Increment per-target missile count
+                    targetView.RPC("IncrementMissileCount", RpcTarget.AllBuffered);
                 }
 
                 break;
@@ -75,48 +72,47 @@ public class GameManager : MonoBehaviourPunCallbacks
         missileErrormsg.SetActive(false);
     }
 
-    private int GetMissileCount()
-    {
-        if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(MissileCountKey, out object count))
-        {
-            Debug.Log($"The missile count is {count}");
-            return (int)count;
-        }
-        return 0;
-    }
+    //private int GetMissileCount()
+    //{
+    //    if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(MissileCountKey, out object count))
+    //    {
+    //        Debug.Log($"The missile count is {count}");
+    //        return (int)count;
+    //    }
+    //    return 0;
+    //}
 
-    private void SetMissileCount(int count)
-    {
-        ExitGames.Client.Photon.Hashtable props = new ExitGames.Client.Photon.Hashtable
-        {
-            { MissileCountKey, count }
-        };
-        PhotonNetwork.CurrentRoom.SetCustomProperties(props);
-        Debug.Log($"The missile count after set is {count}");
-    }
+    //private void SetMissileCount(int count)
+    //{
+    //    ExitGames.Client.Photon.Hashtable props = new ExitGames.Client.Photon.Hashtable
+    //    {
+    //        { MissileCountKey, count }
+    //    };
+    //    PhotonNetwork.CurrentRoom.SetCustomProperties(props);
+    //    Debug.Log($"The missile count after set is {count}");
+    //}
 
-    [PunRPC]
-    private void RPC_DecrementMissileCount()
-    {
+    //[PunRPC]
+    //private void RPC_DecrementMissileCount()
+    //{
 
-        int current = GetMissileCount();
-        SetMissileCount(Mathf.Max(0, current - 1));
+    //    int current = GetMissileCount();
+    //    SetMissileCount(Mathf.Max(0, current - 1));
 
-    }
+    //}
 
-    [PunRPC]
-    private void RPC_IncrementMissileCount()
-    {
-        int current = GetMissileCount();
-        if (current < maxMissiles)
-        {
-            SetMissileCount(current + 1);
-        }
-    }
+    //[PunRPC]
+    //private void RPC_IncrementMissileCount()
+    //{
+    //    int current = GetMissileCount();
+    //    if (current < maxMissiles)
+    //    {
+    //        SetMissileCount(current + 1);
+    //    }
+    //}
     public void SetMyJet(JetController jet)
     {
         myJet = jet;
-        view = myJet.GetComponent<PhotonView>();
     }
 
     [PunRPC]

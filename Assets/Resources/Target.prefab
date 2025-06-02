@@ -92,7 +92,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f811c8cad22c6b946bda764b9c84e800, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  viewIDText: {fileID: 0}
   lives: 2
   probabilityOfHit: 3
 --- !u!58 &3555395576404705584

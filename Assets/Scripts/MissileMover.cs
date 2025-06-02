@@ -57,58 +57,17 @@ public class MissileMover : MonoBehaviourPun
         yield return new WaitForSeconds(1f); // enough time for RPCs to arrive
         PhotonNetwork.Destroy(gameObject);
     }
-    //[PunRPC]
-    //void EvaluateHitRPC(int targetViewID, float probability)
-    //{
-    //    if (!PhotonNetwork.IsMasterClient) return;
-
-    //    Debug.Log($"view id in EvaluateHitRPC is {targetViewID}");
-    //    int randomVal = Random.Range(0, 10);
-    //    bool isHit = randomVal <= probability;
-
-    //    Debug.Log($"Random: {randomVal}, Prob: {probability}, Hit: {isHit}");
-
-    //    photonView.RPC("ApplyHitResult", RpcTarget.AllBuffered, targetViewID, isHit);
-    //}
-
-    //[PunRPC]
-    //void ApplyHitResult(int targetViewID, bool isHit)
-    //{
-    //    Debug.Log($"view id in ApplyHitResult is {targetViewID}");
-    //    StartCoroutine(WaitAndApplyHit(targetViewID, isHit));
-    //}
-    //private IEnumerator WaitAndApplyHit(int viewID, bool isHit)
-    //{
-    //    float timeout = 2f;  // Max wait time
-    //    float elapsed = 0f;
-    //    GameObject targetObj = null;
-
-    //    while (targetObj == null && elapsed < timeout)
-    //    {
-    //        PhotonView view = PhotonView.Find(viewID);
-    //        if (view != null)
-    //        {
-    //            targetObj = view.gameObject;
-    //            break;
-    //        }
-
-    //        elapsed += 0.1f;
-    //        yield return new WaitForSeconds(0.1f);
-    //    }
-
-    //    if (targetObj != null && isHit)
-    //    {
-    //        targetObj.GetComponent<Target>().DeductLivesNetworked();
-    //    }
-    //    else if (targetObj == null)
-    //    {
-    //        Debug.LogWarning($"❌ Timed out waiting for PhotonView {viewID} to appear.");
-    //    }
-    //}
 
     [PunRPC]
     void NotifyMissileDestroyed()
     {
-        FindAnyObjectByType<GameManager>().photonView.RPC("RPC_DecrementMissileCount", RpcTarget.All);
+        if (target != null)
+        {
+            PhotonView targetView = target.GetComponent<PhotonView>();
+            if (targetView != null)
+            {
+                targetView.RPC("DecrementMissileCount", RpcTarget.AllBuffered);
+            }
+        }
     }
 }

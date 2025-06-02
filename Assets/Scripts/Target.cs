@@ -8,6 +8,9 @@ public class Target : MonoBehaviourPun, IPunInstantiateMagicCallback
     [SerializeField] private int lives;
     [SerializeField] private float probabilityOfHit;
 
+    private int activeMissiles = 0;
+    public const int MaxMissiles = 2;
+
     public void OnPhotonInstantiate(PhotonMessageInfo info)
     {
         RectTransform targetRect = GetComponent<RectTransform>();
@@ -31,6 +34,22 @@ public class Target : MonoBehaviourPun, IPunInstantiateMagicCallback
                 photonView.RPC("RPC_DestroyTarget", RpcTarget.All);
             }
         }
+    }
+    [PunRPC]
+    public void IncrementMissileCount()
+    {
+        activeMissiles++;
+    }
+
+    [PunRPC]
+    public void DecrementMissileCount()
+    {
+        activeMissiles = Mathf.Max(0, activeMissiles - 1);
+    }
+
+    public bool CanBeTargeted()
+    {
+        return activeMissiles < MaxMissiles;
     }
     public float GetHitProbability()
     {
